@@ -1,0 +1,15 @@
+### CRIAR TABELA COM A DATA DA ÚLTIMA ATUALIZAÇÃO DO ARQUIVO PBI
+
+Linguagem M
+
+let
+    Fonte = DateTimeZone.SwitchZone(DateTime.AddZone(DateTime.LocalNow(),3,0),0,0)
+in
+    Fonte
+
+DAX
+
+## Tabela 
+
+Atualização = DateTimeZone.SwitchZone(DateTime.AddZone(DateTime.LocalNow(),3,0),0,0)
+Msg Atualizacao = CONCATENATE("Última atualização: ",'Atualização'[Atualização])
