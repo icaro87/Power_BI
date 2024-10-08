@@ -1,0 +1,31 @@
+*********************************************************************************
+MEDIDA DAX PARA VERIFICAR SE HÁ FILTROS NO PAINEL E RETORNAR OS VALORES FILTRADOS
+*********************************************************************************
+
+Filtros aplicados = 
+
+--- EXIBIR OS VALORES FILTRADOS
+
+VAR ESTADO = 
+IF(
+    ISFILTERED(fIADCQuery[QueryRegiCentro.Nome Região]),
+    (" [Estado: " & CONCATENATEX(VALUES(fIADCQuery[QueryRegiCentro.Nome Região]), fIADCQuery[QueryRegiCentro.Nome Região], ",", fIADCQuery[QueryRegiCentro.Nome Região], ASC) & "]")
+)
+
+VAR VELOCIDADE = 
+IF(
+    ISFILTERED(fIADCQuery[Velocidade]), /* Verifica se a coluna foi filtrada.*/
+    (" [Velocidade: " & CONCATENATEX(VALUES(fIADCQuery[Velocidade]), fIADCQuery[Velocidade], ",", fIADCQuery[Velocidade], ASC) & "]") /* Concatena os valores filtrados em ordem Ascendente. */
+)
+
+RETURN
+IF(
+    AND(
+        COUNTROWS(ALLSELECTED(fIADCQuery[QueryRegiCentro.Nome Região])) = COUNTROWS(ALL(fIADCQuery[QueryRegiCentro.Nome Região])), /* ----- (***) ----- */
+        COUNTROWS(ALLSELECTED(fIADCQuery[Velocidade])) = COUNTROWS(ALL(fIADCQuery[Velocidade])) /* ----- (***) ----- */
+    ),
+    "Sem filtros aplicados",
+    "Filtro(s) aplicado(s): " & ESTADO & VELOCIDADE
+)
+
+/* (***) Verifica se a quantidade de linhas filtradas corresponde a quantidade de informações totais para aplicar a condição. */
