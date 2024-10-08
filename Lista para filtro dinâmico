@@ -29,7 +29,7 @@ SELECT
 FROM Dados_Brutos.SAP.EKKO AS P 
 LEFT JOIN Dados_Brutos.SAP.EKPO AS E ON E.EBELN = P.EBELN
 WHERE 
-      P.BUKRS = '1000'                                                                    /* PETROBRAS */
+      P.BUKRS = '1000'                                                                    /* CLIENTE */
       AND P.LOEKZ <> 'L'                                                                  /* DESCONSIDERANDO PEDIDOS ELIMINADOS */
       AND P.KONNR IN ('"&Contratos_Sarrafo&"')                                            /* SOMENTE PEDIDOS DE CONTRATOS --SARRAFO-- */
       AND P.MEMORY <> 'X'                                                                 /* DESCONSIDERANDO PEDIDOS MEMORIZADOS */
@@ -43,7 +43,7 @@ SELECT
 FROM Dados_Brutos.SAP.EKKO AS P 
 LEFT JOIN Dados_Brutos.SAP.EKPO AS E ON E.EBELN = P.EBELN
 WHERE 
-      P.BUKRS = '1000'                                                                    /* PETROBRAS */
+      P.BUKRS = '1000'                                                                    /* CLIENTE */
       AND P.LOEKZ <> 'L'                                                                  /* DESCONSIDERANDO PEDIDOS ELIMINADOS */
       AND P.MEMORY <> 'X'                                                                 /* DESCONSIDERANDO PEDIDOS MEMORIZADOS */
       AND CAST(P.BEDAT AS DATE) BETWEEN ADD_MONTHS(CURRENT_DATE, -36) AND CURRENT_DATE    /* ULTIMOS 3 ANOS */
