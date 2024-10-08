@@ -1,0 +1,18 @@
+## Tabela d_Calendário em DAX.
+
+Calendário = 
+    ADDCOLUMNS(
+        CALENDAR(DATE(2000, 01, 01), DATE(2040, 12, 31)),
+        "Ano", YEAR([Date]),
+        "Número_do_mês", MONTH([Date]), 
+        "Dia", DAY([Date]),        
+        "Nome_mês", FORMAT([Date], "mmmm", "pt-BR"),
+        "Nome_mês_abreviado", FORMAT([Date], "mmm", "pt-BR"),
+        "Nome_mês_ano", FORMAT([Date], "mmm", "pt-BR") & "/" & YEAR([Date]),
+        "Número_dia_semana", WEEKDAY([Date]), 
+        "Nome_dia_semana", SWITCH(WEEKDAY([Date]), 1, "Domingo", 2, "Segunda-feira", 3, "Terça-feira", 4, "Quarta-feira", 5, "Quinta-feira", 6, "Sexta-feira", 7, "Sábado"),
+        "Número_semana_ano", WEEKNUM([Date]), 
+        "Trimestre", QUARTER([Date]), 
+        "Ano_Trimestre", YEAR([Date]) & " T" & QUARTER([Date]), 
+        "Dia_Útil", IF(OR(WEEKDAY([Date]) = 1, WEEKDAY([Date]) = 7), "Fim de Semana", "Dia Útil")
+    )
