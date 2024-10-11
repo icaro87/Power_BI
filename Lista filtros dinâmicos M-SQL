@@ -1,0 +1,65 @@
+Exemplo de lista dinamica para usar no power query e SQL como filtro.
+
+-------------------------------------
+
+CONSULTA LINGUAGEM M
+
+let
+    Fonte = f_Sarrafo,
+    Tabela = Table.SelectColumns(Fonte,{"Nº Contrato"}),
+    Personalizar1 = 1,
+    #"Convertido para Tabela" = #table(1, {{Personalizar1}}),
+    #"Personalização Adicionada" = Table.AddColumn(#"Convertido para Tabela", "Personalizar", each Tabela[Nº Contrato]),
+    #"Valores Extraídos" = Table.TransformColumns(#"Personalização Adicionada", {"Personalizar", each Text.Combine(List.Transform(_, Text.From), "', '"), type text}),
+    Personalizar = #"Valores Extraídos"{0}[Personalizar]
+in
+    Personalizar
+
+
+-------------------------------------
+
+CONSULTA LINGUAGEM SQL
+
+
+WITH 
+PEDIDOS_EMITIDOS_CONTRATO AS (
+SELECT 
+      E.MATKL
+      ,COUNT(DISTINCT P.EBELN) AS QTD_PEDIDOS_CONTRATO
+FROM Dados_Brutos.SAP.EKKO AS P 
+LEFT JOIN Dados_Brutos.SAP.EKPO AS E ON E.EBELN = P.EBELN
+WHERE 
+      P.BUKRS = '1000'                                                                    /* CLIENTE */
+      AND P.LOEKZ <> 'L'                                                                  /* DESCONSIDERANDO PEDIDOS ELIMINADOS */
+      AND P.KONNR IN ('"&Contratos_Sarrafo&"')                                            /* SOMENTE PEDIDOS DE CONTRATOS --SARRAFO-- */
+      AND P.MEMORY <> 'X'                                                                 /* DESCONSIDERANDO PEDIDOS MEMORIZADOS */
+      AND CAST(P.BEDAT AS DATE) BETWEEN ADD_MONTHS(CURRENT_DATE, -36) AND CURRENT_DATE    /* ULTIMOS 3 ANOS */
+GROUP BY E.MATKL
+),
+TOTAL_PEDIDOS_EMITIDOS AS (
+SELECT 
+      E.MATKL
+      ,COUNT(DISTINCT P.EBELN) AS QTD_PEDIDOS_TOTAL
+FROM Dados_Brutos.SAP.EKKO AS P 
+LEFT JOIN Dados_Brutos.SAP.EKPO AS E ON E.EBELN = P.EBELN
+WHERE 
+      P.BUKRS = '1000'                                                                    /* CLIENTE */
+      AND P.LOEKZ <> 'L'                                                                  /* DESCONSIDERANDO PEDIDOS ELIMINADOS */
+      AND P.MEMORY <> 'X'                                                                 /* DESCONSIDERANDO PEDIDOS MEMORIZADOS */
+      AND CAST(P.BEDAT AS DATE) BETWEEN ADD_MONTHS(CURRENT_DATE, -36) AND CURRENT_DATE    /* ULTIMOS 3 ANOS */
+GROUP BY E.MATKL
+),
+TABELAS_FINAL AS(
+SELECT 
+      T1.*, 
+      COALESCE(T2.QTD_PEDIDOS_CONTRATO, 0) AS QTD_PEDIDOS_CONTRATO 
+FROM TOTAL_PEDIDOS_EMITIDOS AS T1
+LEFT JOIN PEDIDOS_EMITIDOS_CONTRATO AS T2 ON T1.MATKL = T2.MATKL
+)
+SELECT 
+      TABELAS_FINAL.*, 
+      CASE 
+            WHEN TABELAS_FINAL.QTD_PEDIDOS_TOTAL = 0 THEN 0 
+            ELSE ROUND((CAST(TABELAS_FINAL.QTD_PEDIDOS_CONTRATO AS FLOAT) / CAST(TABELAS_FINAL.QTD_PEDIDOS_TOTAL AS FLOAT)), 4) 
+      END AS ICCG
+FROM TABELAS_FINAL
