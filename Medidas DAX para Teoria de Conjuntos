@@ -1,0 +1,77 @@
+## MEDIDAS DAX PARA CÁLCULO DE QUANTIDADES DE ACORDO COM A TERORIA DE CONJUNTOS (UNION, EXCEPT E INTERSECT)
+
+Materiais = 
+
+--- QUANTIDADE TOTAL DE MATERIAIS
+
+VAR NM = DISTINCTCOUNTNOBLANK( f_Pedidos[MATERIAL] )
+
+RETURN NM
+
+
+============================================================================
+
+
+Materiais A = 
+
+--- QUANTIDADE DE MATERIAIS APENAS DO CONJUNTO A
+
+VAR NM_A = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] IN { "Contrato Ativo", "Contrato Inativo" } && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_B = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] = "SPOT" && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_SO_A = EXCEPT( NM_A, NM_B )
+
+RETURN 
+COUNTROWS( NM_SO_A ) + 0
+
+
+============================================================================
+
+
+Materiais B = 
+
+--- QUANTIDADE DE MATERIAIS APENAS DO CONJUNTO B
+
+VAR NM_A = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] IN { "Contrato Ativo", "Contrato Inativo" } && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_B = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] = "SPOT" && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_SO_B = EXCEPT( NM_B, NM_A )
+
+RETURN 
+COUNTROWS( NM_SO_B ) + 0
+
+
+============================================================================
+
+Materiais A/B = 
+
+--- QUANTIDADE DE MATERIAIS DO CONJUNTO A E B
+
+VAR NM_A = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] IN { "Contrato Ativo", "Contrato Inativo" } && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_B = 
+CALCULATETABLE(
+    VALUES( f_Pedidos[MATERIAL] ),
+    FILTER( f_Pedidos, f_Pedidos[TIPO_PEDIDO] = "SPOT" && NOT( ISBLANK( f_Pedidos[MATERIAL] ) ) )
+)
+VAR NM_A_E_B = INTERSECT( NM_A, NM_B )
+
+RETURN 
+COUNTROWS( NM_A_E_B ) + 0
