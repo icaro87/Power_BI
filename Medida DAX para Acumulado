@@ -1,0 +1,11 @@
+## MEDIDA DAX PARA CÁLCULO DE VALOR ACUMULADO
+
+Faturamento Acumulado = 
+CALCULATE(
+    [Faturamento],
+    FILTER(
+        ALL(d_Calendario),
+        d_Calendario[Date] <= MIN( d_Calendario[Date] )
+    )
+)
+   
