@@ -2,13 +2,18 @@
 
 d_Calendario = 
 
-VAR INICIO = YEAR( MIN( f_financials[Date] ) )
+VAR ANO_INICIO = YEAR( MIN( f_financials[Date] ) )
+VAR ANO_FIM = YEAR( MAX( f_financials[Date] ) )
 
-VAR FIM = YEAR( MAX( f_financials[Date] ) )
+VAR MES_INICIO = MONTH( MIN( f_financials[Date] ) )
+VAR MES_FIM = MONTH( MAX( f_financials[Date] ) )
+
+VAR DIA_INICIO = DAY( MIN( f_financials[Date] ) )
+VAR DIA_FIM = DAY( MAX( f_financials[Date] ) )
 
 VAR CALENDARIO = 
 ADDCOLUMNS(
-    CALENDAR(DATE(INICIO, 01, 01), DATE(FIM, 12, 31)),
+    CALENDAR(DATE(ANO_INICIO, MES_INICIO, DIA_INICIO), DATE(ANO_FIM, MES_FIM, DIA_FIM)),
     "Ano", YEAR([Date]),
     "Número_do_mês", MONTH([Date]), 
     "Dia", DAY([Date]),        
