@@ -1,9 +1,26 @@
+## MEDIDAS DAX PARA CÁLCULO DO YOY OU YEAR OVER YEAR DE DUAS FORMAS DIFERENTES
+
+
 YOY Faturamento = 
 
 --- YEAR OVER YEAR DE FATURAMENTO
 
 VAR ANO_ATUAL = [Faturamento]
 VAR ANO_ANTERIOR = CALCULATE( [Faturamento], DATEADD( d_Calendario[Date], -1, YEAR ) )
+VAR YOY = DIVIDE( ANO_ATUAL - ANO_ANTERIOR, ANO_ANTERIOR , 0 )
+
+RETURN YOY
+
+
+=========================================================================================
+
+
+YOY Faturamento = 
+
+--- YEAR OVER YEAR DE FATURAMENTO
+
+VAR ANO_ATUAL = [Faturamento]
+VAR ANO_ANTERIOR = CALCULATE( [Faturamento], SAMEPERIODLASTYEAR( d_Calendario[Date] ) )
 VAR YOY = DIVIDE( ANO_ATUAL - ANO_ANTERIOR, ANO_ANTERIOR , 0 )
 
 RETURN YOY
