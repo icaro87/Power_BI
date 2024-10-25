@@ -1,14 +1,19 @@
-## MEDIDA DAX PARA CÁLCULO DO YTD
+## MEDIDAS DAX PARA CÁLCULO DO YTD DE DUAS FORMAS DIFERENTES
 
 YTD = 
 
-VAR ANO_ATUAL = [Faturamento]
-VAR ANO_ANTERIOR = 
-CALCULATE(
-    [Faturamento],
-    SAMEPERIODLASTYEAR( d_Calendario[Date] )
-)
-VAR RESULTADO = DIVIDE( ANO_ATUAL - ANO_ANTERIOR, ANO_ANTERIOR, 0 )
+VAR RESULTADO = TOTALYTD( [Faturamento], d_Calendario[Date] )
+
+RETURN
+RESULTADO
+
+
+===========================================================================
+
+
+YTD = 
+
+VAR RESULTADO = CALCULATE( [Faturamento], DATESYTD( d_Calendario[Date] ) )
 
 RETURN
 RESULTADO
