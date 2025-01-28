@@ -21,6 +21,6 @@ CONSULTA QUE RECEBERÁ A LISTA PARA FILTRO
 
 let
   Fonte = f_Pedidos,
-  #"Linhas Filtradas" = 
+  #"Linhas Filtradas" = Table.SelectRows( Fonte, each List.Contains( Text.Split( Lista_Contratos, "," ), [Nº Contrato] ) )
 in
   #"Linhas Filtradas"
