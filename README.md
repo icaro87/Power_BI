@@ -1,4 +1,4 @@
 # Códigos em M e DAX do Power BI
 
-Repositório destinado ao compartilhamento de código em linguagem M e DAX do Power BI, principalmente voltados a boa prática na construção de código limpo e performance do painel.
+Repositório destinado ao compartilhamento de código em linguagem M e DAX do Power BI, com foco na boa prática da construção de código limpo e performance do painel.
 
