@@ -1,0 +1,26 @@
+Exemplo de lista dinamica para usar no power query como filtro.
+
+-------------------------------------
+
+CONSULTA LINGUAGEM M
+
+let
+    Fonte = f_Sarrafo,
+    Tabela = Table.SelectColumns(Fonte,{"Nº Contrato"}),
+    Personalizar1 = 1,
+    #"Convertido para Tabela" = #table(1, {{Personalizar1}}),
+    #"Personalização Adicionada" = Table.AddColumn(#"Convertido para Tabela", "Personalizar", each Tabela[Nº Contrato]),
+    #"Valores Extraídos" = Table.TransformColumns(#"Personalização Adicionada", {"Personalizar", each Text.Combine(List.Transform(_, Text.From), "', '"), type text}),
+    Personalizar = #"Valores Extraídos"{0}[Personalizar]
+in
+    Personalizar
+
+-------------------------------------
+
+CONSULTA QUE RECEBERÁ A LISTA PARA FILTRO
+
+let
+  Fonte = f_Pedidos,
+  #"Linhas Filtradas" = 
+in
+  #"Linhas Filtradas"
