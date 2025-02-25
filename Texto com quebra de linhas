@@ -1,3 +1,69 @@
-# TEXTO COM QUEBRA DE LINHAS PARA COLUNAS
+--- TEXTO COM QUEBRA DE LINHAS PARA COLUNAS
 
-## AGRUPANDO COLUNA DE ÍNDICE 
+--- AGRUPANDO COLUNA DE ÍNDICE 
+
+----------------------------------------- Tabela 1 (antes)
+
+CONTRATO	  ESCOPO	    FORNECEDOR	  TRATAMENTO	                  ACAO_TRATAMENTO
+4600769608	CONTRATO 1	FORNECEDOR 1	CONTRATO EM SUBSTITUIÇÃO	    25/03/2025-AÇÃO 1
+                                                                    25/04/2025-AÇÃO 2
+                                                                    25/05/2025-AÇÃO 3
+4600858826	CONTRATO 2	FORNECEDOR 2	EM ANÁLISE DE ADITIVO	        25/06/2025-AÇÃO 1
+                                                                    25/09/2025-AÇÃO 2
+4600554661	CONTRATO 3	FORNECEDOR 3	ADITIVO EM ANDAMENTO	        25/05/2025-AÇÃO 1
+                                                                    25/06/2025-AÇÃO 2
+                                                                    25/07/2025-AÇÃO 3
+                                                                    25/08/2025-AÇÃO 4
+                                                                    25/10/2025-AÇÃO 5
+4600522711	CONTRATO 4	FORNECEDOR 4	ANÁLISE DE GESTÃO DA DEMANDA	25/10/2025-AÇÃO 1
+                                                                    25/11/2025-AÇÃO 2
+                                                                    25/01/2026-AÇÃO 3
+                                                                    25/02/2026-AÇÃO 4
+                                                                    25/03/2026-AÇÃO 5
+                                                                    25/04/2026-AÇÃO 6
+
+
+
+----------------------------------------- Tabela 2 (depois)
+
+CONTRATO  	ESCOPO    	FORNECEDOR  	TRATAMENTO	                  ÚLTIMA AÇÃO      	PENÚLTIMA AÇÃO
+4600769608	CONTRATO 1	FORNECEDOR 1	CONTRATO EM SUBSTITUIÇÃO	    25/03/2025-AÇÃO 1	25/04/2025-AÇÃO 2
+4600858826	CONTRATO 2	FORNECEDOR 2	EM ANÁLISE DE ADITIVO	        25/06/2025-AÇÃO 1	25/09/2025-AÇÃO 2
+4600554661	CONTRATO 3	FORNECEDOR 3	ADITIVO EM ANDAMENTO	        25/05/2025-AÇÃO 1	25/06/2025-AÇÃO 2
+4600522711	CONTRATO 4	FORNECEDOR 4	ANÁLISE DE GESTÃO DA DEMANDA	25/10/2025-AÇÃO 1	25/11/2025-AÇÃO 2
+
+
+Na tabela 1 temos quebra de linhas na coluna ACAO_TRATAMENTO, que funciona como monitoramento de ações sobre um contrato.
+
+O que queremos aqui é manipular a tabela 1 de modo a selecionar as duas últimas ações de cada contrato e transformar na tabela 2.
+
+
+--- CÓDIGO M
+
+let
+    // FONTE DE DADOS
+    Fonte = Excel.CurrentWorkbook(){[Name="Tabela3"]}[Content],
+    
+    // ALTERAR TIPO DE DADOS
+    #"Tipo Alterado" = Table.TransformColumnTypes(Fonte,{{"CONTRATO", Int64.Type}, {"ESCOPO", type text}, {"FORNECEDOR", type text}, {"TRATAMENTO", type text}, {"ACAO_TRATAMENTO", type text}}),
+    
+    // DIVIDIR COLUNA ACAO_TRATAMENTO E ALTERANDO TIPO DE DADOS
+    #"Dividir Coluna por Delimitador" = Table.ExpandListColumn(Table.TransformColumns(#"Tipo Alterado", {{"ACAO_TRATAMENTO", Splitter.SplitTextByDelimiter("#(lf)", QuoteStyle.Csv), let itemType = (type nullable text) meta [Serialized.Text = true] in type {itemType}}}), "ACAO_TRATAMENTO"),
+    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Dividir Coluna por Delimitador",{{"ACAO_TRATAMENTO", type text}, {"CONTRATO", type text}}),
+    
+    // AGRUPANDO LINHAS SEM AGREGAÇÃO
+    #"Linhas Agrupadas" = Table.Group(#"Tipo Alterado1", {"CONTRATO"}, {{"TABELA", each _, type table [CONTRATO=nullable text, ESCOPO=nullable text, FORNECEDOR=nullable text, TRATAMENTO=nullable text, ACAO_TRATAMENTO=nullable text]}}),
+    
+    // COLUNA ÍNDICE POR CONTRATO
+    #"Índice Adicionado" = Table.TransformColumns(#"Linhas Agrupadas", {"TABELA", each Table.AddIndexColumn(_, "ÍNDICE", 1, 1, Int64.Type)} ),
+    #"TABELA Expandido" = Table.ExpandTableColumn(#"Índice Adicionado", "TABELA", {"ESCOPO", "FORNECEDOR", "TRATAMENTO", "ACAO_TRATAMENTO", "ÍNDICE"}, {"ESCOPO", "FORNECEDOR", "TRATAMENTO", "ACAO_TRATAMENTO", "ÍNDICE"}),
+    #"Tipo Alterado2" = Table.TransformColumnTypes(#"TABELA Expandido",{{"ESCOPO", type text}, {"FORNECEDOR", type text}, {"TRATAMENTO", type text}, {"ACAO_TRATAMENTO", type text}, {"ÍNDICE", Int64.Type}}),
+    
+    // FILTRO 2 ÚLTIMAS AÇÕES
+    #"Linhas Filtradas" = Table.SelectRows(#"Tipo Alterado2", each [ÍNDICE] <= 2),
+    
+    // PIVOTANDO A COLUNA ACAO_TRATAMENTO E RENOMEANDO AS DUAS NOVAS COLUNAS
+    #"Coluna em pivô" = Table.Pivot(Table.TransformColumnTypes(#"Linhas Filtradas", {{"ÍNDICE", type text}}, "pt-BR"), List.Distinct(Table.TransformColumnTypes(#"Linhas Filtradas", {{"ÍNDICE", type text}}, "pt-BR")[ÍNDICE]), "ÍNDICE", "ACAO_TRATAMENTO"),
+    #"Colunas Renomeadas" = Table.RenameColumns(#"Coluna em pivô",{{"1", " ÚLTIMA AÇÃO"}, {"2", "PENÚLTIMA AÇÃO"}})
+in
+    #"Colunas Renomeadas"
