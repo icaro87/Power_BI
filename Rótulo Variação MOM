@@ -1,0 +1,72 @@
+Exemplo de exibição do rótulo de variação month over month (em ordem de construção)
+
+---------------------------------------------------------------------------
+
+MOM Despesa Fixa = 
+
+--- VARIAÇÃO MONTH OVER MONTH DO TOTAL DE DESPESAS
+
+VAR _MES_ATUAL = [Despesas Fixas]
+VAR _MES_ANTERIOR = CALCULATE( [Despesas Fixas], DATEADD( 'Calendário'[Date], -1, MONTH ) )
+VAR _MOM = DIVIDE( _MES_ATUAL - _MES_ANTERIOR, _MES_ANTERIOR, 0 )
+
+RETURN
+_MOM
+
+---------------------------------------------------------------------------
+
+Eixo Y Max Desp Fixas = 
+
+--- CALCULANDO O VALOR MÁXIMO DAS DESPESAS FIXAS MENSAIS
+
+VAR TABELA = ALLSELECTED( 'Calendário' )
+VAR EIXOMAX = MAXX( TABELA, [Despesas Fixas] )
+VAR DESLOC = EIXOMAX * 1.23
+
+RETURN
+DESLOC
+
+---------------------------------------------------------------------------
+
+***** Medida em formato dinâmico *****
+
+Rótulo Despesa Fixa Plot = 
+
+--- TOTAL DESPESAS COM DESLOCAMENTO EIXO Y
+
+VAR _VALOR = [Despesas Fixas]
+VAR _DESLOC = [Eixo Y Max Desp Fixas] * 0.05
+VAR _VALOR_FINAL = _VALOR + _DESLOC
+
+RETURN
+_VALOR_FINAL
+
+***** Formato *****
+
+VAR _MOM_DESPESA = [MOM Despesa Fixa]
+VAR _MOM_DESPESA_FORMAT = 
+SWITCH(
+    TRUE(),
+    _MOM_DESPESA < 0, FORMAT( _MOM_DESPESA * (-1), " ⮟0.0%" ),
+    _MOM_DESPESA = 0, FORMAT( _MOM_DESPESA * (-1), " 0%" ),
+    FORMAT( _MOM_DESPESA, " ⮝0.0%" )
+)
+
+RETURN
+"""" & _MOM_DESPESA_FORMAT & """"
+
+---------------------------------------------------------------------------
+
+Cor Rótulo MOM Despesas = 
+
+VAR _MOM_DESPESA = [MOM Despesa Fixa]
+VAR _COR = 
+SWITCH(
+    TRUE(),
+    _MOM_DESPESA < 0, "RED",
+    _MOM_DESPESA = 0, "BLACK",
+    "GREEN"
+)
+
+RETURN
+_COR
