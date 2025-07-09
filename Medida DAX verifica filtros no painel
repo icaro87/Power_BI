@@ -1,0 +1,119 @@
+*********************************************************************************
+MEDIDA DAX PARA VERIFICAR SE HÁ FILTROS NO PAINEL E RETORNAR OS VALORES FILTRADOS
+*********************************************************************************
+
+Filtros aplicados = 
+
+--- EXIBIR OS VALORES FILTRADOS
+
+VAR ESTADO = 
+IF(
+    ISFILTERED(fIADCQuery[QueryRegiCentro.Nome Região]),
+    (" [Estado: " & CONCATENATEX(VALUES(fIADCQuery[QueryRegiCentro.Nome Região]), fIADCQuery[QueryRegiCentro.Nome Região], ",", fIADCQuery[QueryRegiCentro.Nome Região], ASC) & "]")
+)
+
+VAR VELOCIDADE = 
+IF(
+    ISFILTERED(fIADCQuery[Velocidade]), /* Verifica se a coluna foi filtrada.*/
+    (" [Velocidade: " & CONCATENATEX(VALUES(fIADCQuery[Velocidade]), fIADCQuery[Velocidade], ",", fIADCQuery[Velocidade], ASC) & "]") /* Concatena os valores filtrados em ordem Ascendente. */
+)
+
+RETURN
+IF(
+    AND(
+        COUNTROWS(ALLSELECTED(fIADCQuery[QueryRegiCentro.Nome Região])) = COUNTROWS(ALL(fIADCQuery[QueryRegiCentro.Nome Região])), /* ----- (***) ----- */
+        COUNTROWS(ALLSELECTED(fIADCQuery[Velocidade])) = COUNTROWS(ALL(fIADCQuery[Velocidade])) /* ----- (***) ----- */
+    ),
+    "Sem filtros aplicados",
+    "Filtro(s) aplicado(s): " & ESTADO & VELOCIDADE
+)
+
+/* (***) Verifica se a quantidade de linhas filtradas corresponde a quantidade de informações totais para aplicar a condição. */
+
+
+===================================================================================================================================================================================================
+
+
+Outra forma de obter a lista de filtros aplicados
+
+Resumo Filtros Perf =
+
+--- Filtros aplicados na pagina Performance
+
+VAR GestoresSelecionados =
+    VAR Gestores = VALUES( f_Sarrafo[Gestor] )
+    VAR QtdGestores = COUNTROWS( Gestores )
+    RETURN
+        IF(
+            ISFILTERED(f_Sarrafo[Gestor]),
+            "Gestor do Contrato: " &
+                SWITCH(
+                    TRUE(),
+                    QtdGestores = 1, SELECTEDVALUE(f_Sarrafo[Gestor]),
+                    QtdGestores > 1, "2 ou mais selecionados"
+                ),
+            "Gestor do Contrato: Todos"
+        )
+
+VAR TipoSelecionados =
+    VAR Tipos = VALUES(f_Sarrafo[Tipo])
+    VAR QtdeTipos = COUNTROWS(Tipos)
+    RETURN
+        IF(
+            ISFILTERED(f_Sarrafo[Tipo]),
+            "Tipo de contrato: " &
+            SWITCH(
+                TRUE(),
+                QtdeTipos = 1, SELECTEDVALUE(f_Sarrafo[Tipo]),
+                QtdeTipos > 1, "2 ou mais selecionados"
+            ),
+            "Tipo de contrato: Todos"
+        )
+
+VAR AbrangenciaSelecionadas =
+    VAR Abrangencias = VALUES(f_Sarrafo[Abrangência])
+    VAR QtdeAbrangencias = COUNTROWS(Abrangencias)
+    RETURN
+        IF(
+            ISFILTERED(f_Sarrafo[Abrangência]),
+            "Abrangência: " &
+            SWITCH(
+                TRUE(),
+                QtdeAbrangencias = 1, SELECTEDVALUE(f_Sarrafo[Abrangência]),
+                QtdeAbrangencias > 1, "2 ou mais selecionados"
+            ),
+            "Abrangência: Todos"
+        )
+
+VAR FornecedoresSelecionados =
+    VAR Fornecedores = VALUES(f_Sarrafo[Fornecedor Abreviado])
+    VAR QtdeFornecedor = COUNTROWS(Fornecedores)
+    RETURN
+        IF(
+            ISFILTERED(f_Sarrafo[Fornecedor Abreviado]),
+            "Nome do fornecedor: " &
+            SWITCH(
+                TRUE(),
+                QtdeFornecedor = 1, SELECTEDVALUE(f_Sarrafo[Fornecedor Abreviado]),
+                QtdeFornecedor > 1, "2 ou mais selecionados"
+            ),
+            "Nome do fornecedor: Todos"
+        )
+
+VAR StatusSelecionados =
+    VAR StatusContratos = VALUES(f_Sarrafo[Status Contrato])
+    VAR QtdeStatus = COUNTROWS(StatusContratos)
+    RETURN
+        IF(
+            ISFILTERED(f_Sarrafo[Status Contrato]),
+            "Status do contrato: " &
+            SWITCH(
+                TRUE(),
+                QtdeStatus = 1, SELECTEDVALUE(f_Sarrafo[Status Contrato]),
+                QtdeStatus > 1, "2 ou mais selecionados"
+            ),
+            "Status do contrato: Todos"
+        )
+
+RETURN
+"Filtro(s): " & AbrangenciaSelecionadas & " | " & GestoresSelecionados & " | " & TipoSelecionados & " | " & FornecedoresSelecionados & " | " & StatusSelecionados
