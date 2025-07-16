@@ -63,3 +63,71 @@ SELECT
             ELSE ROUND((CAST(TABELAS_FINAL.QTD_PEDIDOS_CONTRATO AS FLOAT) / CAST(TABELAS_FINAL.QTD_PEDIDOS_TOTAL AS FLOAT)), 4) 
       END AS ICCG
 FROM TABELAS_FINAL
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+VERSÃO DE FILTROS DINÂMICOS COM LISTA E CONSULTA SQL JUNTOS NO MESMO CÓDIGO M
+
+let  
+    // FONTE - PLANILHA GESTÃO CONTRATUAL
+    Fonte = Excel.Workbook(Web.Contents("https://petrobrasbr.sharepoint.com/teams/PaineldeContratosSBSBENSPQCGC-BancodeDados/Shared%20Documents/Banco%20de%20Dados/0%20-%20Status%20Semanal/Planilha%20da%20Gest%C3%A3o%20Contratual.xlsx"), null, true),
+
+    // SELECIONANDO COLUNAS
+    #"Outras Colunas Removidas1" = Table.SelectColumns(Fonte,{"Nº Contrato"}),
+
+    // TRANSFORMAÇÃO EM LISTA DE CONTRATOS
+    Tabela = Table.SelectColumns(#"Outras Colunas Removidas1",{"Nº Contrato"}),
+    Personalizar1 = 1,
+    #"Convertido para Tabela" = #table(1, {{Personalizar1}}),
+    #"Personalização Adicionada1" = Table.AddColumn(#"Convertido para Tabela", "Personalizar", each #"Outras Colunas Removidas1"[Nº Contrato]),
+    #"Valores Extraídos" = Table.TransformColumns(#"Personalização Adicionada1", {"Personalizar", each Text.Combine(List.Transform(_, each "'" & _ & "'"), ","), type text}),
+    Personalizar = #"Valores Extraídos"{0}[Personalizar],
+    
+    // FONTE TDV
+    Consulta_TDV = TibcoTdv.DataSource("TDVCPBIP; dataSource=S10231", null, [Query ="
+
+        WITH CTE AS(
+            SELECT
+                IP.UNIQUEID ,
+                IP.KONNR AS NUMERO_CONTRATO,
+                IP.KONNR || '#' || RIGHT(IP.MATNR, 8) || '#' || A.REGION || '#' || CAST(IP.KTPNR AS FLOAT) AS Cod, 
+                COALESCE(S.QUANTIDADE_ENTREGUE, IP.MENGE) AS QTD_TOTAL
+            FROM
+                Dados_Brutos.SAP.EKKO AS PE
+            INNER JOIN
+                Dados_Brutos.SAP.EKPO AS IP ON PE.EBELN = IP.EBELN
+            LEFT JOIN
+                    (
+                        SELECT 
+                            CONCAT(I.NR_PEDIDO_COMPRAS, RIGHT(I.NR_ITEM_PEDIDO_COMPRAS, 5)) AS UNIQUEID, 
+                            I.QN_ENTRADA_MERC_UNID_PEDIDO AS QUANTIDADE_ENTREGUE
+                        FROM 
+                            Dados_Curados.Documentos_de_Compras.BW_SP_PUM19_ITENS_PEDIDOS AS I
+                        WHERE 
+                            I.NR_CONTRATO IN (SELECT DISTINCT P.EBELN AS NUMERO_CONTRATO FROM Dados_Brutos.SAP.EKKO AS P WHERE P.KTWRT > 0 AND CAST(P.KDATE AS DATE) > CURRENT_DATE)
+                            AND I.CD_EMPRESA = '1000' 
+                            AND I.DS_ESTORNO = 'Não Eliminado'
+                            AND I.IN_REMESSA_FINAL = 'X'
+                    ) AS S 
+                ON S.UNIQUEID = IP.UNIQUEID 
+            LEFT JOIN
+                (SELECT T.WERKS, T.ADRNR FROM Dados_Brutos.SAP.T001W AS T) AS T ON IP.WERKS = T.WERKS
+            LEFT JOIN
+                (SELECT A.ADDRNUMBER, A.REGION FROM Dados_Brutos.SAP.ADRC AS A) AS A ON T.ADRNR = A.ADDRNUMBER
+            WHERE
+                PE.LOEKZ <> 'L'
+                AND PE.MEMORY <> 'X'
+                AND PE.BUKRS = '1000'
+                AND IP.LOEKZ <> 'L'
+                AND IP.KONNR IN (" & Personalizar & ")
+        )
+        SELECT 
+            Cod, SUM(QTD_TOTAL) AS 'Qtd Total'
+        FROM CTE
+        GROUP BY 1
+        
+    "])
+
+in
+    Consulta_TDV
