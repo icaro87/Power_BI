@@ -1,0 +1,4 @@
+------------- Extrair o primeiro e o último nome de um texto
+
+Em código M
+Nome_Gestor = Table.AddColumn(#"Texto Aparado", "Gestor Abreviado", each List.First( Text.Split([#"Gestor_-_Nome"], " ") ) & " " & List.Last( Text.Split([#"Gestor_-_Nome"], " ") ))
